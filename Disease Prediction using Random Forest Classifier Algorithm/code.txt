@@ -1,0 +1,93 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from google.colab import files
+
+# Prompt user to upload the file
+print("Please upload the dataset file (dataset.csv).")
+uploaded = files.upload()
+
+# Load dataset
+file_name = list(uploaded.keys())[0]
+data = pd.read_csv(file_name)
+
+# Check for missing values
+missing_values = data.isnull().sum()
+print("Missing values per column:\n", missing_values)
+
+# Handle missing values (e.g., drop rows with missing values)
+data = data.dropna()
+
+# Preprocess the data
+# Assuming 'Disease' is the target column and the rest are symptom features
+X = data.drop('Disease', axis=1)
+y = data['Disease']
+
+# Encode the target variable
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(y)
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Simulate decentralized data by splitting the training data into 3 subsets
+X_train_1, X_temp, y_train_1, y_temp = train_test_split(X_train, y_train, test_size=0.67, random_state=42)
+X_train_2, X_train_3, y_train_2, y_train_3 = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+# Function to perform local training on a node
+def local_training(X_local, y_local):
+    local_model = RandomForestClassifier(n_estimators=100, random_state=42)
+    local_model.fit(X_local, y_local)
+    return local_model
+
+# Local training on each node
+local_models = [local_training(X_train_1, y_train_1), local_training(X_train_2, y_train_2), local_training(X_train_3, y_train_3)]
+
+# Function to aggregate model parameters
+def aggregate_parameters(local_models):
+    # Initialize a new RandomForestClassifier
+    global_model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+    # Extract the decision trees from all local models
+    estimators = []
+    for model in local_models:
+        estimators.extend(model.estimators_)
+
+    # Fit the global model with the aggregated estimators
+    global_model.fit(X_train, y_train)  # Fit to initialize the model correctly
+    global_model.estimators_ = estimators[:global_model.n_estimators]  # Set the aggregated estimators
+    return global_model
+
+# Aggregate the local models to form the global model
+global_model = aggregate_parameters(local_models)
+
+# Evaluate the global model on the test set
+y_pred_global = global_model.predict(X_test)
+accuracy_global = accuracy_score(y_test, y_pred_global)
+print(f'Global Model Accuracy: {accuracy_global * 100:.2f}%')
+print(classification_report(y_test, y_pred_global, target_names=label_encoder.classes_))
+
+# Function to predict disease based on symptoms using the global model
+def predict_disease(symptoms):
+    input_data = pd.DataFrame([symptoms], columns=X.columns)
+    return global_model.predict(input_data)
+
+# Function to collect user input for symptoms
+def get_user_symptoms():
+    print("Enter 1 if you have the symptom, otherwise enter 0.")
+    symptoms = {}
+    for symptom in X.columns:
+        value = input(f"Do you have {symptom}? (1/0): ")
+        symptoms[symptom] = int(value)
+    return symptoms
+
+# Get symptoms from user
+user_symptoms = get_user_symptoms()
+
+# Predict the disease based on user input
+predicted_disease = label_encoder.inverse_transform(predict_disease(user_symptoms))
+print(f'Predicted Disease: {predicted_disease[0]}')
