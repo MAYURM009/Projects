@@ -1,0 +1,1 @@
+Using OpenCV, NumPy, Matplotlib, scipy and Skimage, a region growing and region merging picture segmentation tool was created. The project uses thresholding and random seed generation to separate grayscale photos based on pixel similarity and several interpolation methods for pre-processing.
