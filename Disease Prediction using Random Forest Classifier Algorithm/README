@@ -1,0 +1,1 @@
+A federated learning-based symptom checker that makes use of a Random Forest Classifier. Train_test_split, LabelEncoder, and local model aggregation are a few crucial components utilized in the algorithm. The significant imported libraries are sklearn, numpy, and pandas 
