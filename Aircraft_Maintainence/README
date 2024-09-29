@@ -1,0 +1,1 @@
+Using SentenceTransformers for embeddings, FAISS for search, Hugging Face for question answering, and PyPDF2 for text extraction, NLP-based chatbot was created to respond to inquiries from an airplane maintenance 
