@@ -1,0 +1,10 @@
+SQLite Chat Assistant
+A Python-based natural language interface for querying employee and department data from an SQLite database. This assistant allows users to ask questions in plain English and get formatted responses based on the database content.
+Features
+
+Natural language query processing
+SQLite database integration
+Support for employee and department data queries
+Error handling and user-friendly responses
+Pandas integration for data manipulation
+Jupyter Notebook implementation
